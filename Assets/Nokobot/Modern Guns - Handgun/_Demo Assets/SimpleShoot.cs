@@ -4,7 +4,10 @@ using UnityEngine;
 
 [AddComponentMenu("Nokobot/Modern Guns/Simple Shoot")]
 public class SimpleShoot : MonoBehaviour
-{
+{   
+    public int maxAmmo = 10; // Maximum ammo in the gun
+    private int currentAmmo; // Current ammo in the gun
+
     [Header("Prefab Refrences")]
     public GameObject bulletPrefab;
     public GameObject casingPrefab;
@@ -30,15 +33,34 @@ public class SimpleShoot : MonoBehaviour
 
         if (gunAnimator == null)
             gunAnimator = GetComponentInChildren<Animator>();
+
+        Reload();
+    }
+
+    void Reload()
+    {
+        // Reset current ammo to max ammo
+        currentAmmo = maxAmmo;
     }
 
     void Update()
     {
         //If you want a different input, change it here
-        if (Input.GetButtonDown("Fire1"))
+        
+        if (Vector3.Angle(transform.up, Vector3.up) > 100 && currentAmmo < maxAmmo)
         {
-            //Calls animation on the gun that has the relevant animation events that will fire
-            gunAnimator.SetTrigger("Fire");
+            // If the gun is tilted too much, reload automatically
+            Reload();
+        }
+        if (Input.GetButtonDown("Fire1") && Vector3.Angle(transform.up, Vector3.up) < 100){
+            if (currentAmmo > 0)
+            {
+                gunAnimator.SetTrigger("Fire");
+            }
+            else
+            {
+                Debug.Log("Out of ammo!");
+            }
         }
     }
 
@@ -46,8 +68,11 @@ public class SimpleShoot : MonoBehaviour
     void Shoot()
     {
         //cancels if there's no bullet prefeb
-        if (!bulletPrefab)
-        { return; }
+        if (!bulletPrefab || currentAmmo <= 0)
+        return;
+
+        currentAmmo--; // Reduce ammo here
+        Debug.Log("Ammo remaining: " + currentAmmo);
 
         // Create and fire the bullet
         Instantiate(bulletPrefab, barrelLocation.position, barrelLocation.rotation).GetComponent<Rigidbody>().AddForce(barrelLocation.forward * shotPower);
