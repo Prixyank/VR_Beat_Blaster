@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 [AddComponentMenu("Nokobot/Modern Guns/Simple Shoot")]
 public class SimpleShoot : MonoBehaviour
@@ -25,6 +26,12 @@ public class SimpleShoot : MonoBehaviour
     [Tooltip("Line width")] [SerializeField] private float lineWidth = 0.5f;
     [Tooltip("Line duration")] [SerializeField] private float lineDuration = 0.5f;
     [Tooltip("Line color")] [SerializeField] private Color lineColor = Color.yellow;
+    public AudioSource Source;
+    public AudioClip fire;
+    public AudioClip reload;
+    public AudioClip noammo;
+    public TMP_Text ammoText;
+
 
     void Start()
     {
@@ -41,6 +48,8 @@ public class SimpleShoot : MonoBehaviour
     {
         // Reset current ammo to max ammo
         currentAmmo = maxAmmo;
+        UpdateAmmoUI();
+        Source.PlayOneShot(reload);
     }
 
     void Update()
@@ -60,7 +69,16 @@ public class SimpleShoot : MonoBehaviour
             else
             {
                 Debug.Log("Out of ammo!");
+                Source.PlayOneShot(noammo);
             }
+        }
+    }
+
+    void UpdateAmmoUI()
+    {
+        if (ammoText != null)
+        {
+            ammoText.text = $"Ammo:{currentAmmo}";
         }
     }
 
@@ -72,6 +90,8 @@ public class SimpleShoot : MonoBehaviour
         return;
 
         currentAmmo--; // Reduce ammo here
+        UpdateAmmoUI();
+        Source.PlayOneShot(fire);
         Debug.Log("Ammo remaining: " + currentAmmo);
 
         // Create and fire the bullet
