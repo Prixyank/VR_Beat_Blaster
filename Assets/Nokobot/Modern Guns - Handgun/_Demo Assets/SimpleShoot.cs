@@ -49,7 +49,8 @@ public class SimpleShoot : MonoBehaviour
         // Reset current ammo to max ammo
         currentAmmo = maxAmmo;
         UpdateAmmoUI();
-        Source.PlayOneShot(reload);
+        if (Source != null && reload != null)
+            Source.PlayOneShot(reload);
     }
 
     void Update()
@@ -69,7 +70,8 @@ public class SimpleShoot : MonoBehaviour
             else
             {
                 Debug.Log("Out of ammo!");
-                Source.PlayOneShot(noammo);
+                if (Source != null && noammo != null)
+                    Source.PlayOneShot(noammo);
             }
         }
     }
@@ -91,18 +93,23 @@ public class SimpleShoot : MonoBehaviour
 
         currentAmmo--; // Reduce ammo here
         UpdateAmmoUI();
-        Source.PlayOneShot(fire);
+        if (Source != null && fire != null)
+            Source.PlayOneShot(fire);
         Debug.Log("Ammo remaining: " + currentAmmo);
 
         // Create and fire the bullet
-        Instantiate(bulletPrefab, barrelLocation.position, barrelLocation.rotation).GetComponent<Rigidbody>().AddForce(barrelLocation.forward * shotPower);
+        GameObject bullet = Instantiate(bulletPrefab, barrelLocation.position, barrelLocation.rotation);
+        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        if (rb != null)
+            rb.AddForce(barrelLocation.forward * shotPower);
+        Destroy(bullet, 2f); // Destroy bullet after 2 seconds
 
         if (muzzleFlashPrefab)
         {
             //Create the muzzle flash
             GameObject tempFlash;
             tempFlash = Instantiate(muzzleFlashPrefab, barrelLocation.position, barrelLocation.rotation);
-            
+
             //Destroy the muzzle flash effect
             Destroy(tempFlash, destroyTimer);
         }
@@ -143,7 +150,7 @@ public class SimpleShoot : MonoBehaviour
         Vector3 endPoint = hasHit ? hitInfo.point : barrelLocation.position + barrelLocation.forward * 100f;
         
         // Add slight offset to start point to avoid clipping
-        startPoint += barrelLocation.forward * 0.1f;
+        startPoint += barrelLocation.forward * 0.5f;
         
         lineRenderer.SetPosition(0, startPoint);
         lineRenderer.SetPosition(1, endPoint);
