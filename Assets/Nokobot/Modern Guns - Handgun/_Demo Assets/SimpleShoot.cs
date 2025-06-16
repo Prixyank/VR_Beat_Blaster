@@ -83,7 +83,7 @@ public class SimpleShoot : MonoBehaviour
     }
 
     //This function creates the bullet behavior
-    void Shoot()
+    public void Shoot()
     {
         //cancels if there's no bullet prefeb
         if (!bulletPrefab || currentAmmo <= 0)
