@@ -1,14 +1,19 @@
-using System.Collections;
 using UnityEngine;
 
 public class enemy : MonoBehaviour
 {
     public SimpleShoot shooter;
-    public float shootInterval = 2f;
-    private float shootTimer = 0f;
+    public float shootTriggerTime = 0.4f; // Time in animation when gun should shoot
+    public float triggerUncertainty = 0.1f; // Allowed margin
+    public string shootAnimationName = "Shoot";
+    
+    private Animator animator;
+    private bool hasShotThisCycle = false;
 
     void Start()
     {
+        animator = GetComponent<Animator>();
+
         if (shooter != null)
         {
             shooter.maxAmmo = 100;
@@ -21,22 +26,55 @@ public class enemy : MonoBehaviour
 
     void Update()
     {
+        // Face the camera
         if (Camera.main != null)
         {
-            transform.forward = Vector3.ProjectOnPlane(Camera.main.transform.position - transform.position, Vector3.up).normalized;
+            Vector3 delta = shooter.transform.position - transform.position;
+            transform.forward = Vector3.ProjectOnPlane(Camera.main.transform.position  - delta - transform.position, Vector3.up).normalized;
+           
         }
 
-        shootTimer -= Time.deltaTime;
-        if (shootTimer <= 0f)
+        HandleShootingByAnimation();
+    }
+
+    void HandleShootingByAnimation()
+    {
+        if (animator == null) return;
+
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+
+        if (!stateInfo.IsName(shootAnimationName)) {
+            hasShotThisCycle = false; // Reset for next time Shoot anim starts
+            return;
+        }
+
+        float currentLoopTime = (stateInfo.normalizedTime % 1f) * stateInfo.length;
+        float lowerBound = shootTriggerTime - triggerUncertainty;
+        float upperBound = shootTriggerTime + triggerUncertainty;
+
+        if (!hasShotThisCycle && currentLoopTime >= lowerBound && currentLoopTime <= upperBound)
         {
             Shoot();
-            shootTimer = shootInterval;
+            hasShotThisCycle = true;
+        }
+
+        // Reset flag if animation loop finished
+        if (currentLoopTime < lowerBound)
+        {
+            hasShotThisCycle = false;
         }
     }
 
-    void Dead(Vector3 hitPoint)
+    void Shoot()
     {
-        var animator = GetComponent<Animator>();
+        if (shooter != null)
+        {
+            shooter.Shoot();
+        }
+    }
+
+    public void Dead(Vector3 hitPoint)
+    {
         if (animator != null) animator.enabled = false;
 
         SetupRagdoll(false);
@@ -50,34 +88,22 @@ public class enemy : MonoBehaviour
             }
         }
 
+        Destroy(gameObject, 5f); // Destroy after 5 seconds
         this.enabled = false;
-    }
-
-    void Shoot()
-    {
-        if (shooter != null) shooter.Shoot();
     }
 
     void SetupRagdoll(bool isAnimated)
     {
-        Rigidbody[] bodies = GetComponentsInChildren<Rigidbody>();
-        foreach (var body in bodies)
-        {
+        foreach (var body in GetComponentsInChildren<Rigidbody>())
             body.isKinematic = isAnimated;
-        }
 
-        Collider[] colliders = GetComponentsInChildren<Collider>();
-        foreach (var col in colliders)
-        {
+        foreach (var col in GetComponentsInChildren<Collider>())
             col.enabled = !isAnimated;
-        }
 
-        Collider mainCol = GetComponent<Collider>();
-        if (mainCol != null)
-            mainCol.enabled = isAnimated;
+        var mainCol = GetComponent<Collider>();
+        if (mainCol != null) mainCol.enabled = isAnimated;
 
-        Rigidbody mainRB = GetComponent<Rigidbody>();
-        if (mainRB != null)
-            mainRB.isKinematic = !isAnimated;
+        var mainRB = GetComponent<Rigidbody>();
+        if (mainRB != null) mainRB.isKinematic = !isAnimated;
     }
 }

@@ -114,54 +114,9 @@ public class SimpleShoot : MonoBehaviour
             Destroy(tempFlash, destroyTimer);
         }
 
-        // Create tracer line effect dynamically
-        CreateTracerLine();
     }
 
-    void CreateTracerLine()
-    {
-        // Raycast to detect hit
-        RaycastHit hitInfo;
-        bool hasHit = Physics.Raycast(barrelLocation.position, barrelLocation.forward, out hitInfo, 100f);
-        
-        // Create line dynamically
-        GameObject liner = new GameObject("TracerLine");
-        LineRenderer lineRenderer = liner.AddComponent<LineRenderer>();
-        
-        // Use a simpler, more reliable shader
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        
-        // Set colors using startColor and endColor
-        lineRenderer.startColor = lineColor;
-        lineRenderer.endColor = lineColor;
-        
-        // Configure other properties with better visibility settings
-        lineRenderer.startWidth = lineWidth;
-        lineRenderer.endWidth = lineWidth;
-        lineRenderer.positionCount = 2;
-        lineRenderer.useWorldSpace = true;
-        
-        // Ensure it renders properly
-        lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        lineRenderer.receiveShadows = false;
-        lineRenderer.allowOcclusionWhenDynamic = false;
-        
-        Vector3 startPoint = barrelLocation.position;
-        Vector3 endPoint = hasHit ? hitInfo.point : barrelLocation.position + barrelLocation.forward * 100f;
-        
-        // Add slight offset to start point to avoid clipping
-        startPoint += barrelLocation.forward * 0.5f;
-        
-        lineRenderer.SetPosition(0, startPoint);
-        lineRenderer.SetPosition(1, endPoint);
-        
-        // Debug to check line length
-        Debug.Log($"Tracer line from {startPoint} to {endPoint}, distance: {Vector3.Distance(startPoint, endPoint)}");
-        
-        // Destroy the line after specified duration
-        Destroy(liner, lineDuration);
-    }
-
+    
     //This function creates a casing at the ejection slot
     void CasingRelease()
     {
